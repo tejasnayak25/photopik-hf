@@ -39,7 +39,7 @@ def process(image: np.ndarray):
         x1, y1, x2, y2 = f["bbox"]
         crop = image[y1:y2, x1:x2]
         emb = embedding.embed_face(crop)
-        results.append({"bbox": f["bbox"], "confidence": f.get("confidence", 0), "embedding_len": len(emb)})
+        results.append({"bbox": f["bbox"], "confidence": f.get("confidence", 0), "embedding": emb})
     out_img = draw_boxes(image, faces)
     return out_img, results
 
