@@ -68,9 +68,10 @@ def process(image: np.ndarray):
                 continue
         return ""
 
-    debug_log = read_log_tail()
-    # Return faces and a debug_log string so Spaces UI can display logs when embedding fails
-    return out_img, {"faces": results, "debug_log": debug_log}
+    # Keep returning the raw results array so callers (Gradio client) receive an array
+    # and existing server-side code (which expects result.data[1] to be an array) continues to work.
+    # Debug logs are still written to the local log file and printed.
+    return out_img, results
 
 
 with gr.Blocks() as demo:
