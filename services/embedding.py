@@ -18,6 +18,27 @@ def _model_path():
     return os.path.join(os.getcwd(), "models", "embedding.onnx")
 
 
+def write_log(msg: str):
+    """Append a timestamped message to a local debug log file and print it."""
+    try:
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        line = f"[{timestamp}] {msg}\n"
+        # try writing to /tmp first, then cwd
+        for p in ("/tmp/photopik_embed.log", os.path.join(os.getcwd(), "photopik_embed.log")):
+            try:
+                with open(p, "a", encoding="utf8") as f:
+                    f.write(line)
+                break
+            except Exception:
+                continue
+        print(line.strip())
+    except Exception:
+        try:
+            print("Failed to write debug log", msg)
+        except Exception:
+            pass
+
+
 def load_embedding_model():
     path = _model_path()
     try:
@@ -82,24 +103,4 @@ def embed_face(image: "np.ndarray"):
         write_log(f"Exception during embed_face: {e}\n" + traceback.format_exc())
         return None
 
-
-def write_log(msg: str):
-    """Append a timestamped message to a local debug log file and print it."""
-    try:
-        timestamp = datetime.utcnow().isoformat() + "Z"
-        line = f"[{timestamp}] {msg}\n"
-        # try writing to /tmp first, then cwd
-        for p in ("/tmp/photopik_embed.log", os.path.join(os.getcwd(), "photopik_embed.log")):
-            try:
-                with open(p, "a", encoding="utf8") as f:
-                    f.write(line)
-                break
-            except Exception:
-                continue
-        print(line.strip())
-    except Exception:
-        try:
-            print("Failed to write debug log", msg)
-        except Exception:
-            pass
 
