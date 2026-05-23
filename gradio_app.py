@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
@@ -52,7 +53,24 @@ def process(image: np.ndarray):
 
         results.append({"bbox": f["bbox"], "confidence": f.get("confidence", 0), "embedding": emb})
     out_img = draw_boxes(image, faces)
-    return out_img, results
+
+    def read_log_tail(path_candidates=("/tmp/photopik_embed.log", os.path.join(os.getcwd(), "photopik_embed.log")), max_chars=2000):
+        for p in path_candidates:
+            try:
+                if os.path.exists(p):
+                    with open(p, "r", encoding="utf8", errors="ignore") as f:
+                        f.seek(0, os.SEEK_END)
+                        size = f.tell()
+                        read_from = max(0, size - max_chars)
+                        f.seek(read_from)
+                        return f.read()
+            except Exception:
+                continue
+        return ""
+
+    debug_log = read_log_tail()
+    # Return faces and a debug_log string so Spaces UI can display logs when embedding fails
+    return out_img, {"faces": results, "debug_log": debug_log}
 
 
 with gr.Blocks() as demo:

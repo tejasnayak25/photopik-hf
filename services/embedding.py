@@ -2,6 +2,8 @@ import os
 import numpy as np
 import cv2
 from utils.image import align_face
+import traceback
+from datetime import datetime
 
 try:
     import onnxruntime as ort
@@ -18,10 +20,19 @@ def _model_path():
 
 def load_embedding_model():
     path = _model_path()
-    if ort is None or not os.path.exists(path):
+    try:
+        if ort is None:
+            write_log("onnxruntime (ort) is not installed or failed to import")
+            return None
+        if not os.path.exists(path):
+            write_log(f"Embedding model not found at: {path}")
+            return None
+        sess = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
+        write_log(f"Loaded embedding model from {path}")
+        return sess
+    except Exception as e:
+        write_log(f"Exception loading embedding model: {e}\n" + traceback.format_exc())
         return None
-    sess = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
-    return sess
 
 
 _SESSION = load_embedding_model()
@@ -47,8 +58,7 @@ def embed_face(image: "np.ndarray"):
     """
     global EMB_DIM
     if _SESSION is None:
-        # No model available — return None so callers can detect and warn.
-        # Returning a zero vector silently hides configuration/load problems.
+        write_log("embed_face called but embedding model session is None")
         return None
 
     try:
@@ -68,7 +78,28 @@ def embed_face(image: "np.ndarray"):
             vec = vec / norm
         EMB_DIM = vec.shape[0]
         return vec.tolist()
-    except Exception:
-        # On error, surface failure so callers can handle it explicitly.
+    except Exception as e:
+        write_log(f"Exception during embed_face: {e}\n" + traceback.format_exc())
         return None
+
+
+def write_log(msg: str):
+    """Append a timestamped message to a local debug log file and print it."""
+    try:
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        line = f"[{timestamp}] {msg}\n"
+        # try writing to /tmp first, then cwd
+        for p in ("/tmp/photopik_embed.log", os.path.join(os.getcwd(), "photopik_embed.log")):
+            try:
+                with open(p, "a", encoding="utf8") as f:
+                    f.write(line)
+                break
+            except Exception:
+                continue
+        print(line.strip())
+    except Exception:
+        try:
+            print("Failed to write debug log", msg)
+        except Exception:
+            pass
 
