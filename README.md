@@ -1,5 +1,17 @@
 # Face Embedding Service (HF Space)
 
+---
+title: Face Embedding Service
+emoji: "📷"
+colorFrom: gray
+colorTo: blue
+sdk: docker
+sdk_version: "1.0"
+python_version: "3.10"
+app_file: app.py
+pinned: false
+---
+
 Minimal scaffold for a Hugging Face Docker Space that detects faces and returns embeddings.
 
 Quick start (local):
