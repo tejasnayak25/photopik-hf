@@ -16,7 +16,10 @@ Quick start (local):
 
 ```bash
 python -m pip install -r requirements.txt
-uvicorn app:app --host 0.0.0.0 --port 8080
+# start both API and UI locally
+export API_PORT=8080
+export PORT=7860
+sh start_services.sh
 ```
 
 Endpoints:
@@ -24,6 +27,8 @@ Endpoints:
 - `POST /detect` — upload image -> returns bounding boxes
 - `POST /embed` — upload face image -> returns embedding
 - `POST /process` — full pipeline: detect -> crop -> embed
+
+API endpoints are available on `http://<host>:${API_PORT:-8080}` (e.g. `/detect`, `/embed`, `/process`). The Gradio UI is served on `http://<host>:${PORT:-7860}`.
 
 Next steps: implement model loading in `services/` and add tests.
 

@@ -22,4 +22,6 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY . /app
 EXPOSE 8080 7860
-CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8080} --log-level info"]
+COPY start_services.sh /start_services.sh
+RUN chmod +x /start_services.sh
+CMD ["sh", "/start_services.sh"]

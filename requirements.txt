@@ -8,3 +8,4 @@ insightface
 python-multipart
 pytest
 requests
+gradio
