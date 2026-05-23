@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libx11-6 \
 	libxcb1 \
 	libfontconfig1 \
-	libgl1-mesa-glx \
+	libgl1 \
+	libglvnd0 \
 	libgl1-mesa-dri \
  && rm -rf /var/lib/apt/lists/*
 
