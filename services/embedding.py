@@ -47,7 +47,9 @@ def embed_face(image: "np.ndarray"):
     """
     global EMB_DIM
     if _SESSION is None:
-        return [0.0] * EMB_DIM
+        # No model available — return None so callers can detect and warn.
+        # Returning a zero vector silently hides configuration/load problems.
+        return None
 
     try:
         align_flag = os.environ.get("ALIGN_FACES", "1").lower() in ("1", "true", "yes")
@@ -67,5 +69,6 @@ def embed_face(image: "np.ndarray"):
         EMB_DIM = vec.shape[0]
         return vec.tolist()
     except Exception:
-        return [0.0] * EMB_DIM
+        # On error, surface failure so callers can handle it explicitly.
+        return None
 

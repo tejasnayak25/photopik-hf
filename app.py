@@ -88,6 +88,14 @@ async def detect(file: UploadFile = File(...), _api_key: str = Depends(get_api_k
 async def embed(file: UploadFile = File(...), _api_key: str = Depends(get_api_key), _rl=Depends(rate_limiter)):
     image = await read_image_from_upload(file)
     emb = embedding.embed_face(image)
+    if emb is None:
+        raise HTTPException(status_code=500, detail="Embedding model not available or failed to produce embeddings")
+    # detect suspicious all-zero vector
+    try:
+        if all([float(v) == 0.0 for v in emb]):
+            raise HTTPException(status_code=500, detail="Embedding model produced all-zero vector — check model load")
+    except Exception:
+        pass
     return JSONResponse({"embedding": emb})
 
 
@@ -100,6 +108,16 @@ async def process(file: UploadFile = File(...), _api_key: str = Depends(get_api_
         x1, y1, x2, y2 = f["bbox"]
         crop = image[y1:y2, x1:x2]
         emb = embedding.embed_face(crop)
+        if emb is None:
+            # surface issue but continue returning detections with null embedding
+            print("WARNING: embed_face returned None for a detected face")
+        else:
+            try:
+                if all([float(v) == 0.0 for v in emb]):
+                    print("WARNING: embed_face returned all-zero vector for a detected face")
+            except Exception:
+                pass
+
         results.append({"bbox": f["bbox"], "confidence": f["confidence"], "embedding": emb})
     return JSONResponse({"faces": results})
 
