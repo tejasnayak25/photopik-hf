@@ -1,0 +1,10 @@
+fastapi>=0.95.0
+uvicorn[standard]>=0.22.0
+numpy
+Pillow
+opencv-python-headless
+onnxruntime
+insightface
+python-multipart
+pytest
+requests
