@@ -4,6 +4,7 @@ import cv2
 from utils.image import align_face
 import traceback
 from datetime import datetime
+import multiprocessing
 
 try:
     import onnxruntime as ort
@@ -48,7 +49,12 @@ def load_embedding_model():
         if not os.path.exists(path):
             write_log(f"Embedding model not found at: {path}")
             return None
-        sess = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
+        so = ort.SessionOptions()
+        so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        cpu_count = max(1, multiprocessing.cpu_count())
+        so.intra_op_num_threads = int(os.environ.get("ORT_INTRA_OP_THREADS", str(max(1, cpu_count // 2))))
+        so.inter_op_num_threads = int(os.environ.get("ORT_INTER_OP_THREADS", "1"))
+        sess = ort.InferenceSession(path, sess_options=so, providers=["CPUExecutionProvider"])
         write_log(f"Loaded embedding model from {path}")
         return sess
     except Exception as e:
@@ -83,7 +89,7 @@ def embed_face(image: "np.ndarray"):
         return None
 
     try:
-        align_flag = os.environ.get("ALIGN_FACES", "1").lower() in ("1", "true", "yes")
+        align_flag = os.environ.get("ALIGN_FACES", "0").lower() in ("1", "true", "yes")
         if align_flag:
             try:
                 image = align_face(image, output_size=112)
